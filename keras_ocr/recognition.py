@@ -48,7 +48,8 @@ def swish(x, beta=1):
     return x * keras.backend.sigmoid(beta * x)
 
 
-keras.utils.get_custom_objects().update({'swish': keras.layers.Activation(swish)})
+keras.utils.get_custom_objects().update(
+    {'swish': keras.layers.Activation(swish)})
 
 
 def _repeat(x, num_repeats):
@@ -169,7 +170,8 @@ def CTCDecoder():
         unpadded = tf.keras.backend.ctc_decode(y_pred, input_length)[0][0]
         unpadded_shape = tf.keras.backend.shape(unpadded)
         padded = tf.pad(unpadded,
-                        paddings=[[0, 0], [0, input_shape[1] - unpadded_shape[1]]],
+                        paddings=[
+                            [0, 0], [0, input_shape[1] - unpadded_shape[1]]],
                         constant_values=-1)
         return padded
 
@@ -204,17 +206,26 @@ def build_model(alphabet,
     inputs = keras.layers.Input((height, width, 3 if color else 1))
     x = keras.layers.Permute((2, 1, 3))(inputs)
     x = keras.layers.Lambda(lambda x: x[:, :, ::-1])(x)
-    x = keras.layers.Conv2D(filters[0], (3, 3), activation='relu', padding='same', name='conv_1')(x)
-    x = keras.layers.Conv2D(filters[1], (3, 3), activation='relu', padding='same', name='conv_2')(x)
-    x = keras.layers.Conv2D(filters[2], (3, 3), activation='relu', padding='same', name='conv_3')(x)
+    x = keras.layers.Conv2D(
+        filters[0], (3, 3), activation='relu', padding='same', name='conv_1')(x)
+    x = keras.layers.Conv2D(
+        filters[1], (3, 3), activation='relu', padding='same', name='conv_2')(x)
+    x = keras.layers.Conv2D(
+        filters[2], (3, 3), activation='relu', padding='same', name='conv_3')(x)
     x = keras.layers.BatchNormalization(name='bn_3')(x)
-    x = keras.layers.MaxPooling2D(pool_size=(pool_size, pool_size), name='maxpool_3')(x)
-    x = keras.layers.Conv2D(filters[3], (3, 3), activation='relu', padding='same', name='conv_4')(x)
-    x = keras.layers.Conv2D(filters[4], (3, 3), activation='relu', padding='same', name='conv_5')(x)
+    x = keras.layers.MaxPooling2D(pool_size=(
+        pool_size, pool_size), name='maxpool_3')(x)
+    x = keras.layers.Conv2D(
+        filters[3], (3, 3), activation='relu', padding='same', name='conv_4')(x)
+    x = keras.layers.Conv2D(
+        filters[4], (3, 3), activation='relu', padding='same', name='conv_5')(x)
     x = keras.layers.BatchNormalization(name='bn_5')(x)
-    x = keras.layers.MaxPooling2D(pool_size=(pool_size, pool_size), name='maxpool_5')(x)
-    x = keras.layers.Conv2D(filters[5], (3, 3), activation='relu', padding='same', name='conv_6')(x)
-    x = keras.layers.Conv2D(filters[6], (3, 3), activation='relu', padding='same', name='conv_7')(x)
+    x = keras.layers.MaxPooling2D(pool_size=(
+        pool_size, pool_size), name='maxpool_5')(x)
+    x = keras.layers.Conv2D(
+        filters[5], (3, 3), activation='relu', padding='same', name='conv_6')(x)
+    x = keras.layers.Conv2D(
+        filters[6], (3, 3), activation='relu', padding='same', name='conv_7')(x)
     x = keras.layers.BatchNormalization(name='bn_7')(x)
     if stn:
         # pylint: disable=pointless-string-statement
@@ -236,19 +247,23 @@ def build_model(alphabet,
         .. [2]  https://github.com/skaae/transformer_network/blob/master/transformerlayer.py
         .. [3]  https://github.com/EderSantana/seya/blob/keras1/seya/layers/attention.py
         """
-        stn_input_output_shape = (width // pool_size**2, height // pool_size**2, filters[6])
+        stn_input_output_shape = (
+            width // pool_size**2, height // pool_size**2, filters[6])
         stn_input_layer = keras.layers.Input(shape=stn_input_output_shape)
         locnet_y = keras.layers.Conv2D(16, (5, 5), padding='same',
                                        activation='relu')(stn_input_layer)
-        locnet_y = keras.layers.Conv2D(32, (5, 5), padding='same', activation='relu')(locnet_y)
+        locnet_y = keras.layers.Conv2D(
+            32, (5, 5), padding='same', activation='relu')(locnet_y)
         locnet_y = keras.layers.Flatten()(locnet_y)
         locnet_y = keras.layers.Dense(64, activation='relu')(locnet_y)
         locnet_y = keras.layers.Dense(6,
                                       weights=[
                                           np.zeros((64, 6), dtype='float32'),
-                                          np.float32([[1, 0, 0], [0, 1, 0]]).flatten()
+                                          np.float32(
+                                              [[1, 0, 0], [0, 1, 0]]).flatten()
                                       ])(locnet_y)
-        localization_net = keras.models.Model(inputs=stn_input_layer, outputs=locnet_y)
+        localization_net = keras.models.Model(
+            inputs=stn_input_layer, outputs=locnet_y)
         x = keras.layers.Lambda(_transform,
                                 output_shape=stn_input_output_shape)([x, localization_net(x)])
     x = keras.layers.Reshape(target_shape=(width // pool_size**2,
@@ -286,8 +301,10 @@ def build_model(alphabet,
     x = keras.layers.Lambda(lambda x: x[:, rnn_steps_to_discard:])(x)
     model = keras.models.Model(inputs=inputs, outputs=x)
 
-    prediction_model = keras.models.Model(inputs=inputs, outputs=CTCDecoder()(model.output))
-    labels = keras.layers.Input(name='labels', shape=[model.output_shape[1]], dtype='float32')
+    prediction_model = keras.models.Model(
+        inputs=inputs, outputs=CTCDecoder()(model.output))
+    labels = keras.layers.Input(
+        name='labels', shape=[model.output_shape[1]], dtype='float32')
     label_length = keras.layers.Input(shape=[1])
     input_length = keras.layers.Input(shape=[1])
     loss = keras.layers.Lambda(lambda inputs: keras.backend.ctc_batch_cost(
@@ -309,7 +326,8 @@ class Recognizer:
         include_top: Whether to include the final classification layer in the model (set
             to False to use a custom alphabet).
     """
-    def __init__(self, alphabet=None, weights='kurapan', build_params=None, weights_path = None):
+
+    def __init__(self, alphabet=None, weights='kurapan', build_params=None, weights_path=None):
         assert alphabet or weights, 'At least one of alphabet or weights must be provided.'
         if weights is not None:
             build_params = build_params or PRETRAINED_WEIGHTS[weights]['build_params']
@@ -321,9 +339,9 @@ class Recognizer:
         self.blank_label_idx = len(alphabet)
         self.backbone, self.model, self.training_model, self.prediction_model = build_model(
             alphabet=alphabet, **build_params)
-			
-		# COMMENTED THIS PART	
-        #if weights is not None:
+
+		# COMMENTED THIS PART
+        # if weights is not None:
         #    weights_dict = PRETRAINED_WEIGHTS[weights]
         #    if alphabet == weights_dict['alphabet']:
         #        self.model.load_weights(
@@ -337,7 +355,7 @@ class Recognizer:
         #            tools.download_and_verify(url=weights_dict['weights']['notop']['url'],
         #                                      filename=weights_dict['weights']['notop']['filename'],
         #                                      sha256=weights_dict['weights']['notop']['sha256']))
-		
+
 		# ADDED THIS PART TO LOAD WEIGHTS FROM LOCAL PATH and weights_path args
 		if weights is not None:
             weights_dict = PRETRAINED_WEIGHTS[weights]

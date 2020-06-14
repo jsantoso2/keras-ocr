@@ -63,15 +63,18 @@ def get_gaussian_heatmap(size=512, distanceRatio=3.34):
 
 
 def upconv(x, n, filters):
-    x = keras.layers.Conv2D(filters=filters, kernel_size=1, strides=1, name=f'upconv{n}.conv.0')(x)
-    x = keras.layers.BatchNormalization(epsilon=1e-5, momentum=0.9, name=f'upconv{n}.conv.1')(x)
+    x = keras.layers.Conv2D(filters=filters, kernel_size=1,
+                            strides=1, name=f'upconv{n}.conv.0')(x)
+    x = keras.layers.BatchNormalization(
+        epsilon=1e-5, momentum=0.9, name=f'upconv{n}.conv.1')(x)
     x = keras.layers.Activation('relu', name=f'upconv{n}.conv.2')(x)
     x = keras.layers.Conv2D(filters=filters // 2,
                             kernel_size=3,
                             strides=1,
                             padding='same',
                             name=f'upconv{n}.conv.3')(x)
-    x = keras.layers.BatchNormalization(epsilon=1e-5, momentum=0.9, name=f'upconv{n}.conv.4')(x)
+    x = keras.layers.BatchNormalization(
+        epsilon=1e-5, momentum=0.9, name=f'upconv{n}.conv.4')(x)
     x = keras.layers.Activation('relu', name=f'upconv{n}.conv.5')(x)
     return x
 
@@ -203,13 +206,15 @@ def getBoxes(y_pred,
             segmap[np.logical_and(link_score, text_score)] = 0
             x, y, w, h = [
                 stats[component_id, key] for key in
-                [cv2.CC_STAT_LEFT, cv2.CC_STAT_TOP, cv2.CC_STAT_WIDTH, cv2.CC_STAT_HEIGHT]
+                [cv2.CC_STAT_LEFT, cv2.CC_STAT_TOP,
+                    cv2.CC_STAT_WIDTH, cv2.CC_STAT_HEIGHT]
             ]
 
             # Expand the elements of the segmentation map
             niter = int(np.sqrt(size * min(w, h) / (w * h)) * 2)
             sx, sy = max(x - niter, 0), max(y - niter, 0)
-            ex, ey = min(x + w + niter + 1, img_w), min(y + h + niter + 1, img_h)
+            ex, ey = min(x + w + niter + 1, img_w), min(y +
+                         h + niter + 1, img_h)
             segmap[sy:ey, sx:ex] = cv2.dilate(
                 segmap[sy:ey, sx:ex],
                 cv2.getStructuringElement(cv2.MORPH_RECT, (1 + niter, 1 + niter)))
@@ -222,12 +227,14 @@ def getBoxes(y_pred,
             box = cv2.boxPoints(cv2.minAreaRect(contour))
 
             # Check to see if we have a diamond
-            w, h = np.linalg.norm(box[0] - box[1]), np.linalg.norm(box[1] - box[2])
+            w, h = np.linalg.norm(
+                box[0] - box[1]), np.linalg.norm(box[1] - box[2])
             box_ratio = max(w, h) / (min(w, h) + 1e-5)
             if abs(1 - box_ratio) <= 0.1:
                 l, r = contour[:, 0, 0].min(), contour[:, 0, 0].max()
                 t, b = contour[:, 0, 1].min(), contour[:, 0, 1].max()
-                box = np.array([[l, t], [r, t], [r, b], [l, b]], dtype=np.float32)
+                box = np.array(
+                    [[l, t], [r, t], [r, b], [l, b]], dtype=np.float32)
             else:
                 # Make clock-wise order
                 box = np.array(np.roll(box, 4 - box.sum(axis=1).argmin(), 0))
@@ -249,7 +256,8 @@ class UpsampleLike(keras.layers.Layer):
         else:
             # pylint: disable=no-member
             return tf.compat.v1.image.resize_bilinear(source,
-                                                      size=(target_shape[1], target_shape[2]),
+                                                      size=(
+                                                          target_shape[1], target_shape[2]),
                                                       half_pixel_centers=True)
 
     def compute_output_shape(self, input_shape):
@@ -260,19 +268,32 @@ class UpsampleLike(keras.layers.Layer):
 
 
 def build_vgg_backbone(inputs):
-    x = make_vgg_block(inputs, filters=64, n=0, pooling=False, prefix='basenet.slice1')
-    x = make_vgg_block(x, filters=64, n=3, pooling=True, prefix='basenet.slice1')
-    x = make_vgg_block(x, filters=128, n=7, pooling=False, prefix='basenet.slice1')
-    x = make_vgg_block(x, filters=128, n=10, pooling=True, prefix='basenet.slice1')
-    x = make_vgg_block(x, filters=256, n=14, pooling=False, prefix='basenet.slice2')
-    x = make_vgg_block(x, filters=256, n=17, pooling=False, prefix='basenet.slice2')
-    x = make_vgg_block(x, filters=256, n=20, pooling=True, prefix='basenet.slice3')
-    x = make_vgg_block(x, filters=512, n=24, pooling=False, prefix='basenet.slice3')
-    x = make_vgg_block(x, filters=512, n=27, pooling=False, prefix='basenet.slice3')
-    x = make_vgg_block(x, filters=512, n=30, pooling=True, prefix='basenet.slice4')
-    x = make_vgg_block(x, filters=512, n=34, pooling=False, prefix='basenet.slice4')
-    x = make_vgg_block(x, filters=512, n=37, pooling=False, prefix='basenet.slice4')
-    x = make_vgg_block(x, filters=512, n=40, pooling=True, prefix='basenet.slice4')
+    x = make_vgg_block(inputs, filters=64, n=0,
+                       pooling=False, prefix='basenet.slice1')
+    x = make_vgg_block(x, filters=64, n=3, pooling=True,
+                       prefix='basenet.slice1')
+    x = make_vgg_block(x, filters=128, n=7, pooling=False,
+                       prefix='basenet.slice1')
+    x = make_vgg_block(x, filters=128, n=10, pooling=True,
+                       prefix='basenet.slice1')
+    x = make_vgg_block(x, filters=256, n=14, pooling=False,
+                       prefix='basenet.slice2')
+    x = make_vgg_block(x, filters=256, n=17, pooling=False,
+                       prefix='basenet.slice2')
+    x = make_vgg_block(x, filters=256, n=20, pooling=True,
+                       prefix='basenet.slice3')
+    x = make_vgg_block(x, filters=512, n=24, pooling=False,
+                       prefix='basenet.slice3')
+    x = make_vgg_block(x, filters=512, n=27, pooling=False,
+                       prefix='basenet.slice3')
+    x = make_vgg_block(x, filters=512, n=30, pooling=True,
+                       prefix='basenet.slice4')
+    x = make_vgg_block(x, filters=512, n=34, pooling=False,
+                       prefix='basenet.slice4')
+    x = make_vgg_block(x, filters=512, n=37, pooling=False,
+                       prefix='basenet.slice4')
+    x = make_vgg_block(x, filters=512, n=40, pooling=True,
+                       prefix='basenet.slice4')
     vgg = keras.models.Model(inputs=inputs, outputs=x)
     return [
         vgg.get_layer(slice_name).output for slice_name in [
@@ -358,7 +379,8 @@ def build_keras_model(weights_path: str = None, backbone_name='vgg'):
             assert backbone_name == 'vgg', 'PyTorch weights only allowed with VGG backbone.'
             load_torch_weights(model=model, weights_path=weights_path)
         else:
-            raise NotImplementedError(f'Cannot load weights from {weights_path}')
+            raise NotImplementedError(
+                f'Cannot load weights from {weights_path}')
     return model
 
 
@@ -430,7 +452,8 @@ def build_torch_model(weights_path=None):
             # We don't bother loading the pretrained VGG
             # because we're going to use the weights
             # at weights_path.
-            vgg_pretrained_features = models.vgg16_bn(pretrained=False).features
+            vgg_pretrained_features = models.vgg16_bn(
+                pretrained=False).features
             self.slice1 = torch.nn.Sequential()
             self.slice2 = torch.nn.Sequential()
             self.slice3 = torch.nn.Sequential()
@@ -457,7 +480,8 @@ def build_torch_model(weights_path=None):
                 init_weights(self.slice3.modules())
                 init_weights(self.slice4.modules())
 
-            init_weights(self.slice5.modules())  # no pretrained model for fc6 and fc7
+            # no pretrained model for fc6 and fc7
+            init_weights(self.slice5.modules())
 
             if freeze:
                 for param in self.slice1.parameters():  # only first conv
@@ -476,15 +500,18 @@ def build_torch_model(weights_path=None):
             h_fc7 = h
             vgg_outputs = namedtuple("VggOutputs",
                                      ['fc7', 'relu5_3', 'relu4_3', 'relu3_2', 'relu2_2'])
-            out = vgg_outputs(h_fc7, h_relu5_3, h_relu4_3, h_relu3_2, h_relu2_2)
+            out = vgg_outputs(h_fc7, h_relu5_3, h_relu4_3,
+                              h_relu3_2, h_relu2_2)
             return out
 
     class double_conv(nn.Module):
         def __init__(self, in_ch, mid_ch, out_ch):
             super(double_conv, self).__init__()
             self.conv = nn.Sequential(nn.Conv2d(in_ch + mid_ch, mid_ch, kernel_size=1),
-                                      nn.BatchNorm2d(mid_ch), nn.ReLU(inplace=True),
-                                      nn.Conv2d(mid_ch, out_ch, kernel_size=3, padding=1),
+                                      nn.BatchNorm2d(mid_ch), nn.ReLU(
+                                          inplace=True),
+                                      nn.Conv2d(mid_ch, out_ch,
+                                                kernel_size=3, padding=1),
                                       nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
 
         def forward(self, x):  # pylint: disable=arguments-differ
@@ -530,15 +557,18 @@ def build_torch_model(weights_path=None):
 
             y = self.upconv1(y)
 
-            y = F.interpolate(y, size=sources[2].size()[2:], mode='bilinear', align_corners=False)
+            y = F.interpolate(y, size=sources[2].size()[
+                              2:], mode='bilinear', align_corners=False)
             y = torch.cat([y, sources[2]], dim=1)
             y = self.upconv2(y)
 
-            y = F.interpolate(y, size=sources[3].size()[2:], mode='bilinear', align_corners=False)
+            y = F.interpolate(y, size=sources[3].size()[
+                              2:], mode='bilinear', align_corners=False)
             y = torch.cat([y, sources[3]], dim=1)
             y = self.upconv3(y)
 
-            y = F.interpolate(y, size=sources[4].size()[2:], mode='bilinear', align_corners=False)
+            y = F.interpolate(y, size=sources[4].size()[
+                              2:], mode='bilinear', align_corners=False)
             y = torch.cat([y, sources[4]], dim=1)
             # pylint: enable=E1101
             feature = self.upconv4(y)
@@ -563,6 +593,7 @@ def build_torch_model(weights_path=None):
         model.load_state_dict(
             copyStateDict(torch.load(weights_path, map_location=torch.device('cpu'))))
     return model
+
 
 # COMMENTED THIS PART
 PRETRAINED_WEIGHTS = {
@@ -589,18 +620,19 @@ class Detector:
         optimizer: The optimizer to use for training the model.
         backbone_name: The backbone to use. Currently, only 'vgg' is supported.
     """
+
     def __init__(self,
                  weights='clovaai_general',
                  load_from_torch=False,
                  optimizer='adam',
                  backbone_name='vgg',
-				 weights_path_local = None):
-		
-		##ADDED weights_path_local to args to load weights from local and if else statement
+				 weights_path_local=None):
+
+		# ADDED weights_path_local to args to load weights from local and if else statement
 		if weights_path_local is not None:
 			assert backbone_name == 'vgg', 'Pretrained weights available only for VGG.'
 			weights_path = weights_path
-			
+
 		else:
 			if weights is not None:
 				pretrained_key = (weights, load_from_torch)
@@ -613,8 +645,8 @@ class Detector:
 														 sha256=weights_config['sha256'])
 			else:
 				weights_path = None
-				
-				
+
+
         self.model = build_keras_model(weights_path=weights_path, backbone_name=backbone_name)
         self.model.compile(loss='mse', optimizer=optimizer)
 		
