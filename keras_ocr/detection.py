@@ -595,7 +595,6 @@ def build_torch_model(weights_path=None):
     return model
 
 
-# COMMENTED THIS PART
 PRETRAINED_WEIGHTS = {
     ('clovaai_general', True): {
         'url': 'https://www.mediafire.com/file/qh2ullnnywi320s/craft_mlt_25k.pth/file',
@@ -628,11 +627,10 @@ class Detector:
                  backbone_name='vgg',
                  weights_path_local=None):
         
-        weights_path = ''
         # ADDED weights_path_local to args to load weights from local and if else statement
         if weights_path_local is not None:
             assert backbone_name == 'vgg', 'Pretrained weights available only for VGG.'
-            weights_path = weights_path
+            weights_path = weights_path_local
 
         else:
             if weights is not None:
