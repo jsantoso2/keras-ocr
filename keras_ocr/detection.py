@@ -564,7 +564,7 @@ def build_torch_model(weights_path=None):
             copyStateDict(torch.load(weights_path, map_location=torch.device('cpu'))))
     return model
 
-
+# COMMENTED THIS PART
 PRETRAINED_WEIGHTS = {
     ('clovaai_general', True): {
         'url': 'https://www.mediafire.com/file/qh2ullnnywi320s/craft_mlt_25k.pth/file',
@@ -593,21 +593,31 @@ class Detector:
                  weights='clovaai_general',
                  load_from_torch=False,
                  optimizer='adam',
-                 backbone_name='vgg'):
-        if weights is not None:
-            pretrained_key = (weights, load_from_torch)
-            assert backbone_name == 'vgg', 'Pretrained weights available only for VGG.'
-            assert pretrained_key in PRETRAINED_WEIGHTS, \
-                'Selected weights configuration not found.'
-            weights_config = PRETRAINED_WEIGHTS[pretrained_key]
-            weights_path = tools.download_and_verify(url=weights_config['url'],
-                                                     filename=weights_config['filename'],
-                                                     sha256=weights_config['sha256'])
-        else:
-            weights_path = None
+                 backbone_name='vgg',
+				 weights_path_local = None):
+		
+		##ADDED weights_path_local to args to load weights from local and if else statement
+		if weights_path_local is not None:
+			assert backbone_name == 'vgg', 'Pretrained weights available only for VGG.'
+			weights_path = weights_path
+			
+		else:
+			if weights is not None:
+				pretrained_key = (weights, load_from_torch)
+				assert backbone_name == 'vgg', 'Pretrained weights available only for VGG.'
+				assert pretrained_key in PRETRAINED_WEIGHTS, \
+					'Selected weights configuration not found.'
+				weights_config = PRETRAINED_WEIGHTS[pretrained_key]
+				weights_path = tools.download_and_verify(url=weights_config['url'],
+														 filename=weights_config['filename'],
+														 sha256=weights_config['sha256'])
+			else:
+				weights_path = None
+				
+				
         self.model = build_keras_model(weights_path=weights_path, backbone_name=backbone_name)
         self.model.compile(loss='mse', optimizer=optimizer)
-
+		
     def get_batch_generator(self,
                             image_generator,
                             batch_size=8,
