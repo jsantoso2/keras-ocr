@@ -340,7 +340,7 @@ class Recognizer:
         self.backbone, self.model, self.training_model, self.prediction_model = build_model(
             alphabet=alphabet, **build_params)
 
-		# COMMENTED THIS PART
+        # COMMENTED THIS PART
         # if weights is not None:
         #    weights_dict = PRETRAINED_WEIGHTS[weights]
         #    if alphabet == weights_dict['alphabet']:
@@ -356,15 +356,15 @@ class Recognizer:
         #                                      filename=weights_dict['weights']['notop']['filename'],
         #                                      sha256=weights_dict['weights']['notop']['sha256']))
 
-		# ADDED THIS PART TO LOAD WEIGHTS FROM LOCAL PATH and weights_path args
-		if weights is not None:
+        # ADDED THIS PART TO LOAD WEIGHTS FROM LOCAL PATH and weights_path args
+        if weights is not None:
             weights_dict = PRETRAINED_WEIGHTS[weights]
             if alphabet == weights_dict['alphabet']:
-				if weights_path is not None:
-					self.model.load_weights(weights_path)
-				else:
-					self.model.load_weights(
-						tools.download_and_verify(url=weights_dict['weights']['top']['url'],
+                if weights_path is not None:
+                    self.model.load_weights(weights_path)
+                else:
+                    self.model.load_weights(
+                        tools.download_and_verify(url=weights_dict['weights']['top']['url'],
                                               filename=weights_dict['weights']['top']['filename'],
                                               sha256=weights_dict['weights']['top']['sha256']))
             else:
@@ -374,7 +374,7 @@ class Recognizer:
                     tools.download_and_verify(url=weights_dict['weights']['notop']['url'],
                                               filename=weights_dict['weights']['notop']['filename'],
                                               sha256=weights_dict['weights']['notop']['sha256']))
-											  
+                                              
 
     def get_batch_generator(self, image_generator, batch_size=8, lowercase=False):
         """
