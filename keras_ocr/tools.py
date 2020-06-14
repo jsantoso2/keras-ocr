@@ -37,9 +37,9 @@ from scipy import spatial
 
 # MODIFY READ METHOD
 def read(imgs):
-	""" Takes cv2 object from YOLO and return """
-	return imgs
-	
+    """ Takes cv2 object from YOLO and return """
+    return imgs
+    
 
 def get_rotated_width_height(box):
     """
