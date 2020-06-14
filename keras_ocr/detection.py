@@ -627,7 +627,8 @@ class Detector:
                  optimizer='adam',
                  backbone_name='vgg',
                  weights_path_local=None):
-
+        
+        weights_path = ''
         # ADDED weights_path_local to args to load weights from local and if else statement
         if weights_path_local is not None:
             assert backbone_name == 'vgg', 'Pretrained weights available only for VGG.'
